@@ -41,10 +41,15 @@ module.exports = {
     },
     //before: require('./mock/mock-server.js'),
     proxy: {
+      // http://localhost:9528/admin/product/fileUpload    404
+      // http://localhost:9528/dev-api/admin/product/fileUpload   
+      // http://182.92.128.115/dev-api/admin/product/fileUpload
+      // http://182.92.128.115/admin/product/fileUpload
+
       '/dev-api': { // 匹配所有以 '/dev-api'开头的请求路径
         target: 'http://182.92.128.115', // 代理目标的基础路径
         // target: 'http://47.93.148.192',
-        changeOrigin: true, // 支持跨域
+        changeOrigin: true, // 支持跨域   而且是协议ip 端口任意一个不同就跨域
         pathRewrite: { // 重写路径: 去掉路径中开头的'/dev-api'
           '^/dev-api': ''
         }
