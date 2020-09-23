@@ -41,12 +41,12 @@
 
     <!--增加和修改的dialog -->
     <el-dialog :title="form.id?'修改品牌':'添加品牌'" :visible.sync="isShowDialog">
-      <el-form :model="form" style="width:80%">
-        <el-form-item label="品牌名称" :label-width="'100px'">
+      <el-form :model="form" :rules="rules" style="width:80%" ref="form">
+        <el-form-item label="品牌名称" :label-width="'100px'" prop="tmName">
           <el-input v-model="form.tmName" autocomplete="off"></el-input>
         </el-form-item>
 
-        <el-form-item label="品牌LOGO" :label-width="'100px'">
+        <el-form-item label="品牌LOGO" :label-width="'100px'" prop="logoUrl">
           <!-- POST /admin/product/fileUpload -->
           <!--1、上传前对图片限制
               2、上传成功后要赶紧收集返回的图片真实路径 
@@ -76,7 +76,18 @@
 <script>
 export default {
   name: "Trademark",
-  data() {
+  data() { 
+    // callback   验证通过和不同都是由这个函数来决定的  
+    // var validateTmName = (rule, value, callback) => {
+    //   if(value.length < 2 || value.length > 10 ){
+    //     callback(new Error('输入的名字必须是2-10个字符'))//不通过
+    //   }else if(value.trim() === ''){
+    //     callback(new Error('请输入合法的名称不能为空'))  //不通过
+    //   }else{
+    //     callback() //通过
+    //   }
+    // };
+
     return {
       page: 1,
       limit: 3,
@@ -90,12 +101,41 @@ export default {
         tmName: "",
         logoUrl: "",
       },
+
+      rules: {
+        tmName: [
+          { required: true, message: "请输入品牌名称", trigger: "blur" },
+          // {
+          //   min: 2,
+          //   max: 10,
+          //   message: "长度在 2 到 10 个字符",
+          //   trigger: "change",
+          // },
+
+          { validator: this.validateTmName, trigger: "change" },
+        ],
+        logoUrl: [
+          // trigger: 'change' 对upload来说看不到这个效果，必须是整体验证的时候才能有验证的错误提示
+          { required: true, message: "请上传图片", trigger: "change" },
+        ],
+      },
     };
   },
   mounted() {
     this.getTrademarkList();
   },
   methods: {
+
+    validateTmName:(rule, value, callback) => {
+      if(value.length < 2 || value.length > 10 ){
+        callback(new Error('输入的名字必须是2-10个字符'))//不通过
+      }else if(value.trim() === ''){
+        callback(new Error('请输入合法的名称不能为空'))  //不通过
+      }else{
+        callback() //通过
+      }
+    },
+
     async getTrademarkList(page = 1) {
       this.page = page;
       const result = await this.$API.trademark.getPageList(
@@ -132,7 +172,7 @@ export default {
       //我们把row的地址给了form一份   row和form就指向同一个对象，以后修改form就是在修改row,row改了，页面就会改
       // this.form = row //会多一个id
 
-      this.form = { ...row };
+      this.form = { ...row }; //浅拷贝
     },
 
     //上传成功的回调函数
@@ -160,28 +200,36 @@ export default {
     },
 
     //点击确定按钮添加或者修改trademark的请求逻辑
-    async addOrUpdateTrademark() {
-      //获取参数
-      let trademark = this.form;
-      //整理参数
-      //发请求
-      const result = await this.$API.trademark.addOrUpdate(trademark);
+    addOrUpdateTrademark() {
+      //验证规则
+      this.$refs.form.validate(async (valid) => {
+        if (valid) {
+          //获取参数
+          let trademark = this.form;
+          //整理参数
+          //发请求
+          const result = await this.$API.trademark.addOrUpdate(trademark);
 
-      if (result.code === 200) {
-        //成功干啥
-        //1、提示添加或者修改成功
-        this.$message.success(`${trademark.id ? "修改" : "添加"}品牌成功`);
-        //2、关闭dialog
-        this.isShowDialog = false;
-        //3、重新获取列表数据展示
-        // 如果是添加我们默认是添加在最后一页，重新获取数据也是默认拿的是第一页
-        //但是修改重新获取数据也应该是获取修改的那一页
-        this.getTrademarkList(trademark.id ? this.page : 1);
-      } else {
-        //失败干啥
-        //提示添加或者修改失败
-        this.$message.error(`${trademark.id ? "修改" : "添加"}品牌失败`);
-      }
+          if (result.code === 200) {
+            //成功干啥
+            //1、提示添加或者修改成功
+            this.$message.success(`${trademark.id ? "修改" : "添加"}品牌成功`);
+            //2、关闭dialog
+            this.isShowDialog = false;
+            //3、重新获取列表数据展示
+            // 如果是添加我们默认是添加在最后一页，重新获取数据也是默认拿的是第一页
+            //但是修改重新获取数据也应该是获取修改的那一页
+            this.getTrademarkList(trademark.id ? this.page : 1);
+          } else {
+            //失败干啥
+            //提示添加或者修改失败
+            this.$message.error(`${trademark.id ? "修改" : "添加"}品牌失败`);
+          }
+        } else {
+          console.log("error submit!!");
+          return false;
+        }
+      });
     },
 
     //点击删除按钮
@@ -192,19 +240,21 @@ export default {
         type: "warning",
       })
         .then(async () => {
-          const result = await this.$API.trademark.delete(row.id)
-          if(result.code === 200){
+          const result = await this.$API.trademark.delete(row.id);
+          if (result.code === 200) {
             //提示
-            this.$message.success('删除品牌成功')
-            //重新获取列表数据   
+            this.$message.success("删除品牌成功");
+            //重新获取列表数据
             //重新获取数据需要判断当前页数据是不是一个，如果不是那就获取当前页，如果是那就获取前一页
-            this.getTrademarkList(this.trademarkList.length > 1? this.page : this.page - 1)
-          }else{
-            this.$message.success('删除品牌失败')
+            this.getTrademarkList(
+              this.trademarkList.length > 1 ? this.page : this.page - 1
+            );
+          } else {
+            this.$message.success("删除品牌失败");
           }
         })
         .catch(() => {
-          this.$message.info('取消删除')
+          this.$message.info("取消删除");
         });
     },
   },
