@@ -134,7 +134,7 @@ export default {
 
   data() {
     this.svgNames = svgNames // 保存svg图片列表(非响应式)
-    console.log(svgNames)
+    // console.log(svgNames)
     return {
       menuPermissionList: [], // 菜单列表
       expandKeys: [], // 需要自动展开的项
