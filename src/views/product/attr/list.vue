@@ -1,7 +1,7 @@
 <template>
   <div>
     <el-card>
-      <CategorySelector @handlerCategory="handlerCategory"></CategorySelector>
+      <CategorySelector @handlerCategory="handlerCategory" :isShowList="isShowList"></CategorySelector>
     </el-card>
 
     <el-card style="margin-top: 20px">
@@ -45,12 +45,16 @@
                 size="mini"
                 @click="showUpdateDiv(row)"
               ></HintButton>
-              <HintButton
-                type="danger"
-                icon="el-icon-delete"
-                title="删除属性"
-                size="mini"
-              ></HintButton>
+
+              <el-popconfirm :title="`你确定删除${row.attrName}吗？`" @onConfirm="deleteAttr(row)">
+                <HintButton
+                  slot="reference"
+                  type="danger"
+                  icon="el-icon-delete"
+                  title="删除属性"
+                  size="mini"
+                ></HintButton>
+              </el-popconfirm>
             </template>
           </el-table-column>
         </el-table>
@@ -67,7 +71,7 @@
           </el-form-item>
         </el-form>
 
-        <el-button type="primary" icon="el-icon-plus" @click="addAttrValue"
+        <el-button type="primary" icon="el-icon-plus" @click="addAttrValue" :disabled="!attr.attrName"
           >添加属性值</el-button
         >
         <el-button @click="isShowList = true">取消</el-button>
@@ -104,7 +108,10 @@
           </el-table-column>
           <el-table-column label="操作" width="width">
             <template slot-scope="{ row, $index }">
-              <el-popconfirm :title="`确定删除${row.valueName}吗？`" @onConfirm="attr.attrValueList.splice($index,1)">
+              <el-popconfirm
+                :title="`确定删除${row.valueName}吗？`"
+                @onConfirm="attr.attrValueList.splice($index, 1)"
+              >
                 <!-- <el-button slot="reference">删除</el-button> -->
                 <HintButton
                   slot="reference"
@@ -118,7 +125,7 @@
           </el-table-column>
         </el-table>
 
-        <el-button type="primary" @click="save">保存</el-button>
+        <el-button type="primary" @click="save" :disabled="attr.attrValueList.length===0">保存</el-button>
         <el-button @click="isShowList = true">取消</el-button>
       </div>
     </el-card>
@@ -162,10 +169,26 @@ export default {
     };
   },
   methods: {
+
+    //删除属性逻辑
+    async deleteAttr(row){
+      //发请求
+      const result = await this.$API.attr.delete(row.id)
+      if(result.code === 200){
+        //成功
+        this.$message.success('删除属性成功')
+        this.getAttrList()
+      }else{
+        //失败
+        this.$message.error('删除属性失败')
+      } 
+      
+    },
+
     //最终需要保存发请求
-    async save(){
+    async save() {
       //拿参数
-      let attr = this.attr
+      let attr = this.attr;
       //整理参数
       // 1、如果属性值没有值 那就是空串，删除这个属性值对象
       // 2、去除参数中多余的参数，比如自己加的isEdit
@@ -174,36 +197,33 @@ export default {
       //参数      回调函数  回调函数的参数（item index arr）  回调函数的返回值：布尔值（true和false）
       //返回值    原数组每一项都会调用回调函数，回调函数返回为true的项组成的新数组
 
-      attr.attrValueList = attr.attrValueList.filter(item => {
+      attr.attrValueList = attr.attrValueList.filter((item) => {
         //过滤每一项，如果这一项的属性值名称不为空串，顺变就把这一项的isEdit删掉，然后把这一项放在新数组当中
-        if(item.valueName !== ''){
-          delete item.isEdit
-          return true
+        if (item.valueName !== "") {
+          delete item.isEdit;
+          return true;
         }
-      })
+      });
 
-      
       // 3、如果属性当中属性值列表没有属性值对象 不发请求
-      if(attr.attrValueList.length === 0) return 
+      if (attr.attrValueList.length === 0) return;
 
       //发请求
-      const result = await this.$API.attr.addOrUpdate(attr)
-      
-      if(result.code === 200){
+      const result = await this.$API.attr.addOrUpdate(attr);
+
+      if (result.code === 200) {
         //成功
         //1、提示
-        this.$message.success('保存属性成功')
+        this.$message.success("保存属性成功");
         //2、返回列表页
-        this.isShowList = true
+        this.isShowList = true;
         //3、重新获取属性列表数据
-        this.getAttrList()
-      }else{
+        this.getAttrList();
+      } else {
         //失败
-        this.$message.error('保存属性失败')
+        this.$message.error("保存属性失败");
       }
-      
     },
-
     //input失去焦点或者回车之后变为查看模式
     toLook(row) {
       //失去焦点的时候或者回车之后我们要判断用户输入的数据合法性

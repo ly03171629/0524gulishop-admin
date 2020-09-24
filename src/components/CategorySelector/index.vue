@@ -1,5 +1,5 @@
 <template>
-  <el-form :inline="true" :model="cform">
+  <el-form :inline="true" :model="cform" :disabled="!isShowList">
     <el-form-item label="一级分类">
       <!-- select v-model收集的是选中的某一项的value值 -->
       <el-select v-model="cform.category1Id" placeholder="请选择" @change="handlerCategory1">
@@ -24,6 +24,7 @@
 <script>
 export default {
   name: "CategorySelector",
+  props:['isShowList'],
   data() {
     return {
       cform: {
