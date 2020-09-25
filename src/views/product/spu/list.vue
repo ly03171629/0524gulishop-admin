@@ -62,7 +62,7 @@
       </div>
 
       <!-- <SpuForm v-show="isShowSpuForm" :visible="isShowSpuForm" @update:visible="isShowSpuForm = $event"></SpuForm> -->
-      <SpuForm v-show="isShowSpuForm" :visible.sync="isShowSpuForm"></SpuForm>
+      <SpuForm v-show="isShowSpuForm" :visible.sync="isShowSpuForm" ref="spu"></SpuForm>
 
       <SkuForm v-show="isShowSkuForm"></SkuForm>
 
@@ -106,13 +106,21 @@ export default {
     showAddSkuForm(row){
       this.isShowSkuForm = true
     },
+
+
+
+
     // 点击修改spu按钮逻辑
     showUpdateSpuForm(row){
       this.isShowSpuForm = true
+      //初始化页面数据请求获取
+      this.$refs.spu.initUpdateSpuFormData(row)
     },
     //点击添加spu按钮逻辑
     showAddSpuForm(){
       this.isShowSpuForm = true
+      //初始化页面数据请求获取
+      this.$refs.spu.initAddSpuFormData()
     },
 
     handlerCategory({ categoryId, level }) {

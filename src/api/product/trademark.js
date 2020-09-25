@@ -37,5 +37,11 @@ export default {
   // 分页列表
   getPageList(page,limit){
     return request.get(`/admin/product/baseTrademark/${page}/${limit}`)
+  },
+
+
+  // GET /admin/product/baseTrademark/getTrademarkList   所有的品牌列表
+  getList(){
+    return request.get('/admin/product/baseTrademark/getTrademarkList')
   }
 }
