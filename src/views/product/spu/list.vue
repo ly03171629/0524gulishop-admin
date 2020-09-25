@@ -62,7 +62,7 @@
       </div>
 
       <!-- <SpuForm v-show="isShowSpuForm" :visible="isShowSpuForm" @update:visible="isShowSpuForm = $event"></SpuForm> -->
-      <SpuForm v-show="isShowSpuForm" :visible.sync="isShowSpuForm" ref="spu"></SpuForm>
+      <SpuForm v-show="isShowSpuForm" :visible.sync="isShowSpuForm" ref="spu" @saveSuccess="saveSuccess" @cancelBack="cancelBack"></SpuForm>
 
       <SkuForm v-show="isShowSkuForm"></SkuForm>
 
@@ -100,27 +100,42 @@ export default {
     };
   },
   methods: {
-
+    //取消回来的
+    cancelBack(){
+      this.spuId = null
+    },
+    
+    //保存spu返回到列表页的操作
+    saveSuccess(){
+      if(this.spuId){
+        //修改回来的
+        this.getSpuList(this.page)
+      }else{
+        //添加回来的
+        this.getSpuList()
+      }
+      this.isShowSpuForm = false
+      this.spuId = null
+    },
 
     //点击添加sku按钮逻辑
     showAddSkuForm(row){
       this.isShowSkuForm = true
     },
 
-
-
-
     // 点击修改spu按钮逻辑
     showUpdateSpuForm(row){
+      this.spuId = row.id  //在组件对象身上强行加一个数据 这个数据只是为了判断是添加还是修改的标识
       this.isShowSpuForm = true
       //初始化页面数据请求获取
-      this.$refs.spu.initUpdateSpuFormData(row)
+      this.$refs.spu.initUpdateSpuFormData(row,this.category3Id)
     },
+
     //点击添加spu按钮逻辑
     showAddSpuForm(){
       this.isShowSpuForm = true
       //初始化页面数据请求获取
-      this.$refs.spu.initAddSpuFormData()
+      this.$refs.spu.initAddSpuFormData(this.category3Id)
     },
 
     handlerCategory({ categoryId, level }) {
