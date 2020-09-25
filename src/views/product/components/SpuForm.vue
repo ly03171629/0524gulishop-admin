@@ -49,8 +49,8 @@
     </el-form-item>
 
     <el-form-item label="销售属性" label-width="100px">
-      <el-select placeholder="还有3没选择" value="">
-        <el-option value=""> </el-option>
+      <el-select :placeholder="unUsedSaleAttrList.length > 0?`还有${unUsedSaleAttrList.length}项没选择`:'没啦！！！'" v-model="SaleAttrId">
+        <el-option :label="unUsedSaleAttr.name" :value="unUsedSaleAttr.id" v-for="(unUsedSaleAttr,index) in unUsedSaleAttrList" :key="unUsedSaleAttr.id"> </el-option>
       </el-select>
       <el-button type="primary" icon="el-icon-plus">添加销售属性</el-button>
       <el-table
@@ -65,12 +65,12 @@
         <el-table-column label="属性值名称列表" width="width">
           <template slot-scope="{ row, $index }">
             <el-tag
-              v-for="(spuSaleAttrValue, index) in row.spuSaleAttrValueList" 
+              v-for="(spuSaleAttrValue, index) in row.spuSaleAttrValueList"
               :key="spuSaleAttrValue.id"
               closable
               :disable-transitions="false"
             >
-            <!-- @close="handleClose(tag)" -->
+              <!-- @close="handleClose(tag)" -->
               {{ spuSaleAttrValue.saleAttrValueName }}
             </el-tag>
             <!-- v-if="inputVisible" 为了切换编辑模式和查看模式
@@ -78,25 +78,26 @@
             ref="saveTagInput" 为了自动获取焦点
             -->
             <el-input
-              v-if="inputVisible" 
-              v-model="inputValue"
+              v-if="row.inputVisible"
+              v-model="row.inputValue"
               ref="saveTagInput"
               size="small"
             >
-            <!-- @keyup.enter.native="handleInputConfirm"
+              <!-- @keyup.enter.native="handleInputConfirm"
               @blur="handleInputConfirm" -->
             </el-input>
-            <el-button
-              v-else
-              size="small"
-              >添加名称</el-button
-            >
+            <el-button v-else size="small">添加名称</el-button>
             <!-- @click="showInput" -->
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="150"> 
-          <template slot-scope="{row,$index}">
-            <HintButton type="danger" size="mini" icon="el-icon-delete" title="删除"></HintButton>
+        <el-table-column label="操作" width="150">
+          <template slot-scope="{ row, $index }">
+            <HintButton
+              type="danger"
+              size="mini"
+              icon="el-icon-delete"
+              title="删除"
+            ></HintButton>
           </template>
         </el-table-column>
       </el-table>
@@ -126,8 +127,23 @@ export default {
       spuImageList: [],
       trademarkList: [],
       baseSaleAttrList: [],
+
+      SaleAttrId:''
     };
   },
+
+  computed: {
+    unUsedSaleAttrList() {
+      // unUsedSaleAttrList是未选择的销售属性列表 根据所有的销售属性列表和当前spu本身的销售属性列表计算而来
+      // 过滤所有的销售属性列表当中 名字和spu销售属性列表当中都不一样的
+      return this.baseSaleAttrList.filter((baseSaleAttr) => 
+        this.spuInfo.spuSaleAttrList.every(
+          (spuSaleAttr) => spuSaleAttr.saleAttrName !== baseSaleAttr.name
+        )
+      );
+    },
+  },
+
   methods: {
     async initAddSpuFormData() {
       //通过点击父组件当中的添加spu按钮，父组件当中会调用这个函数
