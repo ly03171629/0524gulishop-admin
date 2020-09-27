@@ -67,7 +67,7 @@
         </el-option>
       </el-select>
       <el-button type="primary" icon="el-icon-plus" @click="addSaleAttr"
-        >添加销售属性</el-button
+      :disabled="unUsedSaleAttrList.length === 0" >添加销售属性</el-button
       >
       <el-table
         :data="spuInfo.spuSaleAttrList"
@@ -169,6 +169,8 @@ export default {
       // unUsedSaleAttrList是未选择的销售属性列表 根据所有的销售属性列表和当前spu本身的销售属性列表计算而来
       // 过滤所有的销售属性列表当中 名字和spu销售属性列表当中都不一样的
       return this.baseSaleAttrList.filter((baseSaleAttr) =>
+
+
         this.spuInfo.spuSaleAttrList.every(
           (spuSaleAttr) => spuSaleAttr.saleAttrName !== baseSaleAttr.name
         )
@@ -187,6 +189,7 @@ export default {
     resetData(){
       this.dialogImageUrl = ""
       this.dialogVisible = false
+
       this.spuInfo = {
         spuName: "",
         tmId: "",
@@ -196,7 +199,10 @@ export default {
       }
       this.spuImageList = []//请求获取到的spu图片列表 || 收集的新的spu图片列表
       this.trademarkList = []
+
       this.baseSaleAttrList = []
+
+
       this.category3Id = ""
       this.attrIdAttrName = ""
     },
@@ -229,7 +235,9 @@ export default {
         //成功
         this.$message.success('保存spu成功')
         //返回列表页
-        this.$emit('saveSuccess')
+        this.$emit('saveSuccess') //通知父组件回来了
+
+
         //重置data的数据
         this.resetData()
       }else{
@@ -255,6 +263,7 @@ export default {
       );
       if (isRepeat) {
         this.$message.info("输入的属性值名称不能重复");
+        row.saleAttrValueName = "";
         return;
       }
 
@@ -275,6 +284,7 @@ export default {
     showInput(row) {
       // row.isShowInput = true
       this.$set(row, "isShowInput", true);
+      this.$set(row, "saleAttrValueName", '');//确保属性身上的saleAttrValueName是响应式属性
       //自动获取焦点
       this.$nextTick(() => {
         this.$refs.saveTagInput.focus();
