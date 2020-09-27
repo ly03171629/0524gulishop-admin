@@ -139,6 +139,22 @@ export default {
       loading: false,
     };
   },
+
+  watch:{
+    //通过监视去控制三级分类的可操作行
+    isShowSpuForm:{
+      handler(val){
+        this.isShowList = !val
+      }
+    },
+    isShowSkuForm:{
+      handler(val){
+        this.isShowList = !val
+      }
+    }
+  },
+
+
   methods: {
     //删除spu
     async deleteSpu(row){
